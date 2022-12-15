@@ -1,3 +1,566 @@
-{
-	"folders": []
-}
+select race,
+count (voterbase_id) as population
+from targets_2022.base_file
+where vf_source_state = 'AZ'
+group by race
+
+SELECT gender,
+race, 
+count (voterbase_id) as population
+ FROM targets_2022.base_file 
+ where vf_source_state = 'AZ'
+group by gender, race
+order by gender
+
+select race,
+voter_type,
+count (voterbase_id) as population
+from targets_2022.base_file
+where vf_source_state = 'AZ'
+group by race, voter_type
+
+select count (voterbase_id)
+from targets_2022.base_file
+where vf_source_state = 'AZ' 
+order by 1
+
+select age_bucket,
+count (*)
+from targets_2022.base_file
+where vf_source_state = 'AZ'
+group by age_bucket
+
+select count (voterbase_id) as population,
+county
+from targets_2022.base_file
+where vf_source_state = 'AZ'
+group by county
+
+select count (voterbase_id) as population,
+county,
+race
+from targets_2022.base_file
+where vf_source_state = 'AZ' and county = 'YUMA'
+group by county, race
+
+select 
+county,
+avg (part_score) as part_score_avg,
+avg (turnout_score) as turnout_score_avg
+from targets_2022.base_file
+where county = 'PIMA' and vf_source_state = 'AZ'
+group by 1
+
+select 
+county,
+avg (part_score) as part_score_avg,
+avg (turnout_score) as turnout_score_avg
+from targets_2022.base_file
+where vf_source_state = 'AZ'
+group by 1
+
+select 
+race,
+avg (part_score) as part_score_avg,
+avg (turnout_score) as turnout_score_avg
+from targets_2022.base_file
+where vf_source_state = 'AZ'
+group by 1
+
+select 
+count (voterbase_id),
+race,
+zip, 
+vf_source_state
+from targets_2022.base_file
+where vf_source_state = 'AZ' and race = 'Hispanic'
+group by race, zip, vf_source_state
+
+select 
+count (voterbase_id),
+race,
+zip, 
+vf_source_state
+from targets_2022.base_file
+where vf_source_state = 'AZ' and race = 'AfAm'
+group by race, zip, vf_source_state
+
+select 
+ceil (persuasion_score * 10)/10 pers_bucket,
+count (*)
+from targets_2022.base_file
+where vf_source_state = 'AZ'
+group by 1
+
+select 
+ceil (pers_rank * 10)/10 gotvbucket,
+count (*)
+from targets_2022.base_file
+where vf_source_state = 'AZ' and gotv_score > 0
+group by 1
+
+select
+avg (part_score) as part_score_avg,
+avg (gotv_score) as gotv_score_avg,
+avg (turnout_score) as turnout_score_avg,
+race,
+income_bucket
+from targets_2022.base_file
+where vf_source_state = 'AZ'
+group by race, income_bucket
+
+select
+case when pers_rank <= 500000 then 'top 500k' -- not working, might be because of NULLs ???
+     when race = 'White' and pers_percentile_rank >= 0.80 then 'top 25% of targets, white'
+     when race != 'White' and pers_percentile_rank >= 0.70 then 'top 30% of targets, non-white'
+     else 'non-target'
+end as audience,
+count(*) as pop,
+count(case when race = 'White' then voterbase_id end) as pop_white,
+count(case when race != 'White' then voterbase_id end) as pop_nonwhite,
+avg(part_score) as avg_part_score,
+avg(turnout_score) as avg_turnout_score,
+avg(persuasion_score) as avg_persuasion_score
+from targets_2022.base_file
+where vf_source_state = 'AZ'
+group by 1
+
+select count (voterbase_id),
+edu_college,
+voter_type
+from targets_2022.base_file 
+where vf_source_state = 'AZ'	and edu_college = 'college'
+group by edu_college, voter_type
+--UPDATED CODE 10/21/22 NEEDED TO KEEP GROUPING VARIABLE AND 
+-- AGGREGATE FUNTIONS TOGETHER AKA RACE/AGE_BUCKET THEN turnout_score
+-- PART_SCORE AND CASE WHEN STATEMENTS. 
+--ANY GROUPING VARIABLES LIKE AGE_BUCKET, RACE, INCOME ETC NEED TO BE LISTED
+--IN THE GROUP BY STATEMENT AT THE END OF THE CODE
+--COUNT * IS PULLING IN INFORMATION FROM ALL COLUMNS. 
+--TURNOUT SCORE NEEDS TO BE = 0-1
+--ADD INTO GOOGLE SHEETS TO START MANIPULATING THE DATA
+select
+race,
+case 
+when race = 'White'
+and part_score >=.3
+and part_score <.7
+and turnout_score > .15
+then 'white persuasion'
+when race = 'AfAm'
+and part_score >=.3
+and part_score <.7
+and turnout_score > .15
+then 'AfAm persuasion'
+when race = 'Hispanic'
+and part_score >=.3
+and part_score <.7
+and turnout_score >.15
+then 'Hispanic persuasion'
+when race = 'Native'
+and part_score >=.3
+and part_score <.7
+and turnout_score > .15
+then 'Native Persuasion'
+when race = 'Asian'
+and part_score >= .3
+and part_score <.7
+and turnout_score > .15
+then 'Asian persuasion'
+else 'non_target'
+end as audience,
+count(voterbase_id),
+avg(part_score) as avg_part_score,
+avg(turnout_score) as avg_turnout_score
+from targets_2022.base_file
+where vf_source_state = 'AZ'
+group by race, audience
+
+UPDATED CODE AS OF OCTOBER 24TH 2022
+GROUPING BY RACE, VOTER_TYPE, GENDER, AND AUDIENCE.
+select
+race,
+gender,
+voter_type,
+case 
+when race = 'White'
+and part_score >=.3
+and part_score <.7
+and turnout_score > .15
+then 'white persuasion'
+when race = 'AfAm'
+and part_score >=.3
+and part_score <.7
+and turnout_score > .15
+then 'AfAm persuasion'
+when race = 'Hispanic'
+and part_score >=.3
+and part_score <.7
+and turnout_score >.15
+then 'Hispanic persuasion'
+when race = 'Native'
+and part_score >=.3
+and part_score <.7
+then 'Native Persuasion'
+when race = 'Asian'
+and part_score >= .3
+and part_score <.7
+and turnout_score > .15
+then 'Asian persuasion'
+else 'non_target'
+end as audience,
+count(voterbase_id),
+avg(part_score) as avg_part_score,
+avg(turnout_score) as avg_turnout_score
+from targets_2022.base_file
+where vf_source_state = 'AZ'
+group by race, gender, voter_type, audience
+
+SQL Practice Problems
+
+Basic SQL: Manipulate Data
+Query table: scratch.sql_practice
+Hint: these problems may require using Order By, Arithmetic, and Where statements that leverage AND/OR
+
+Example Problem:
+1. What is the average partisanship score for 18-34 white voters in WI?
+Answer: 0.538
+Query:
+select 
+avg_part_score,
+*
+from scratch.sql_practice
+where vf_source_state = 'WI' and race = 'White' and age_bucket = '18-34'
+;
+
+Practice Problems:
+   2. What are the average partisanship scores by age for all white voters in WI? Your query will return a table of data�order the rows by age to sort it youngest to oldest
+avg_part_score        age_bucket        vf_source_state        race
+0.538101145662515        18-34        WI        White
+0.516410841571253        35-49        WI        White
+0.46268441934293        50-64        WI        White
+0.488928073112574        65+        WI        White
+Query:
+select 
+avg_part_score,
+age_bucket,
+vf_source_state,
+race
+FROM scratch.sql_practice
+where (vf_source_state = 'WI' and race = 'White')
+order by age_bucket
+
+   3. How many Hispanic people are college educated in AZ?
+Sum = 93778
+SELECT SUM (pop_college)
+FROM scratch.sql_practice
+where race = 'Hispanic' and vf_source_state='AZ'
+;
+   4. How many voters 18-34 are college educated in NH?
+Sum = 7600 
+select sum (pop_college)
+from scratch.sql_practice
+where age_bucket = '18-34' and vf_source_state = 'NH'
+;
+   5. Among Black voters in MI and WI, what age bucket has the highest turnout score?
+Highest Age Turnout score : 50-64
+select avg_turnout_score,
+*
+from scratch.sql_practice 
+where (vf_source_state = 'MI' and race='AfAm') or (vf_source_state = 'WI' and race ='AfAm')
+order by avg_turnout_score desc
+   6. How many college-educated people in NV are aged 18-34 or Hispanic?
+A: 42192
+select sum (pop_college)
+from scratch.sql_practice
+where (vf_source_state = 'NV') and (age_bucket = '18-34'or race = 'Hispanic')
+
+   7. How many women in PA are 35-49 or Asian in PA? (Hint: This query will require using the AND function together with the OR function, and then adding up the resulting rows)
+A: 1293359
+select sum (pop_female)
+from scratch.sql_practice
+where (race = 'Asian' or age_bucket = '35-49')
+and vf_source_state = 'PA'
+
+   8. Create a column that calculates the sum of women and parents
+select pop_college + pop_parent AS pop_collpar
+from scratch.sql_practice
+Intermediate SQL: Aggregate Functions
+Support score=Part_score
+   1. Count / Sum / Min / Max � no Group By
+Result will be a single line
+      1. How many people are in the table?
+select 
+count (voterbase_id) as number_of_people
+from targets_2022.base_file
+43164037
+      2. How many women are in the table?
+select gender,
+count (voterbase_id)
+from targets_2022.base_file
+group by 1
+Female: 22357905
+
+      3. What is the minimum and maximum gotv_score in the table?
+select 
+min(gotv_score) as min_score,
+max(gotv_score) as max_score
+from targets_2022.base_file
+MIN: -0.168698420810276
+MAX: 0.168749040229618
+
+      4. What is the sum of turnout in the state of AZ?
+select 
+vf_source_state,
+sum(turnout_score)
+from targets_2022.base_file
+group by vf_source_state
+2591138.27974429
+      5. What is the average support score in NV?
+select 
+vf_source_state,
+avg (part_score)
+from targets_2022.base_file
+group by 1
+NV: 0.503069070629719
+
+      2. Count / Sum / Min / Max - with Group By
+Result will be a table
+         1. How many people are there in each state?
+select vf_source_state,
+count (voterbase_id) as number_of_people
+from targets_2022.base_file
+group by 1
+NV 2613318
+WI 5076912
+MI 9206261
+PA 10543765
+AZ 5684660
+GA 8915066
+NH 1124055
+         2. How many women are there, by race? 
+select count (voterbase_id),
+race,
+gender
+from targets_2022.base_file
+where gender = 'Female'
+group by gender, race
+count        race        gender
+17194340        White        Female
+1364326        Hispanic        Female
+3097092        AfAm        Female
+623928        Asian        Female
+78219        Native        Female
+
+         3. How many people are there by age and education?
+select count (voterbase_id),
+age_bucket,
+edu_college
+from targets_2022.base_file
+group by age_bucket, edu_college
+count        age_bucket        edu_college
+8693493        50-64        noncollege
+8479393        35-49        noncollege
+8967257        65+        noncollege
+3255001        65+        college
+420420        18-34        college
+9452199        18-34        noncollege
+2527721        50-64        college
+1368553        35-49        college
+
+         4. What is the average support and turnout, by state?
+select vf_source_state,
+avg (part_score) as part_score_avg,
+avg (turnout_score) as turnout_score_avg
+from targets_2022.base_file
+group by vf_source_state
+vf_source_state        part_score_avg        turnout_score_avg
+NV        0.503069070629719        0.391248780102607
+WI        0.472362055995254        0.497718188488702
+PA        0.46506544868448        0.613672246697333
+MI        0.490640919327977        0.460100772757303
+AZ        0.482996036443998        0.567034219103437
+GA        0.53496228613047        0.520803251479176
+NH        0.453490321479449        0.561661443998332
+
+         5. What is the sum of turnout, by state?
+select vf_source_state,
+sum (turnout_score)
+from targets_2022.base_file
+group by vf_source_state
+
+vf_source_state        sum
+NV        941392.688526825
+WI        2491686.74957591
+PA        5250878.60112652
+MI        4134010.96443364
+AZ        2591138.27974429
+GA        4642995.35995145
+NH        618133.1322237
+
+         3. Count / Sum / Min / Max - with Group By and Having
+These are challenging ! Ask for clarification if needed
+            1. Which Congressional Districts cover more than 1 county?
+            1. Hint: Count how many counties there are, grouped by congressional district, and use having to filter for only congressional districts have more than 1
+select count (Distinct county),
+cd
+from targets_2022.base_file
+group by cd
+having count (distinct county) > 1
+
+count        cd
+12        PA-09
+6        PA-16
+187        NULL
+11        MI-09
+4        MI-13
+6        MI-03
+17        GA-11
+37        GA-10
+27        GA-03
+8        GA-07
+
+            2. Which zip codes cover more than 1 county?
+select count (distinct county),
+zip
+from targets_2022.base_file
+group by zip
+having count (distinct county) > 1
+count        zip
+3        18419
+2        15108
+2        15146
+2        19150
+2        15321
+2        19041
+2        16441
+2        15057
+2        16159
+2        18640
+
+            3. Which states have more than 5% Hispanic voters?
+SELECT COUNT(*) AS race_pop, race, vf_source_state
+    FROM targets_2022.base_file
+GROUP BY race, vf_source_state
+
+Intermediate SQL: Case When
+            1. Case when
+Result will be building a column. 
+               1. Code anyone who is a woman and is college-educated as 1, code anyone who is not 0
+SELECT gender,
+edu_college,
+CASE WHEN (gender = 'Female' AND edu_college = 'college') 
+THEN 1 ELSE 0 END
+FROM targets_2022.base_file
+
+               2. Code anyone who is not white and 18-34 as �young POC�, code anyone who is not as �non-target�
+select race, 
+age_bucket,
+case when (race = 'White' AND age_bucket = '18-34')
+then 'young POC' else 'non-target' end
+from targets_2022.base_file
+
+               3. Code anyone who is Black or 18-34 as �young or Black�, code anyone who is not as �non-target�
+select race,
+age_bucket,
+case when (race = 'black' and age_bucket = '18-34')
+then 'young or black' else 'non-target' end
+from targets_2022.base_file
+
+ UPDATED OCTOBER 24, 2022 KG SQL ASSESMENT PROBLEMS
+ --Using the table ts.basic_noncommercial_client:
+--Write a SQL query to select all individuals (voterbase_id) for a specific state. Choose from: AZ, GA, MI, NH, PA, WI
+--Select columns for: race5way, gender, age, marriage, parent, partisanship, voter status, registration date
+--Rename the columns (shorten the names) as you select them
+
+select voterbase_id,
+race5way_noncommercial as race,
+gender_noncommercial as gender, 
+coalesced_noncommercial_age as age,
+marriage_noncommercial as marriage_status,
+parent_noncommercial as parental_status, 
+partisanship_dem_pr_noncommercial as part_dem_pr,
+voter_status,
+registration_date
+from ts.basic_noncommercial_client
+where vf_source_state = 'AZ'
+order by 1
+
+--Using ts.modeling_noncommercial_client:
+--Join the following columns to the ones you selected in the previous step: ts_midterm_general_turnout, education_collegegrad, education_highschool, ideology
+--What type of join do you want to use here?
+
+---KG AZ PP & PAC
+--white college and non-college nbv.  older 35+ hispanics and young 18-34 hispanics 
+--partisonship 30-70; Turnout 35+(W College_edu) 40+(W Non-college_nbv), 
+--20+(POC) 20+(H young_18-34) 20+(H old_35+) 20+(POC)
+--USING GROUPING VARIABLES
+select
+case 
+    when race = 'White'
+        and part_score >=.3
+        and part_score <.7
+        and turnout_score > .35
+        and edu_college = 'college'
+    then 'white college persuasion'
+    when race = 'White'
+        and part_score >=.3
+        and part_score <.7
+        and turnout_score > .40
+        and edu_college = 'noncollege'
+        and voter_type is not null -- only NBV coalition
+    then 'white non-college persuasion, NBV coalition'
+    when race = 'Hispanic'
+        and part_score >=.3
+        and part_score <.7
+        and turnout_score >.20
+        and age_bucket = '18-34'
+    then 'Hispanic persuasion, young'
+    when race = 'Hispanic'
+        and part_score >=.3
+        and part_score <.7
+        and turnout_score >.20
+        and age_bucket != '18-34'
+    then 'Hispanic persuasion, 35+'
+    when race in ('AfAm','Native','Asian')
+        and part_score >=.3
+        and part_score <.7
+        and turnout_score > .20
+    then 'Other POC persuasion'
+    else 'non_target'
+end as audience,
+count(voterbase_id) as pop,
+avg(part_score) as avg_part_score,
+avg(turnout_score) as avg_turnout_score,
+avg(persuasion_score) as persuasion_score
+from targets_2022.base_file
+where vf_source_state = 'AZ'
+group by audience
+
+--NO GROUPING VARIABLES ONLY SCORES TO CALCULATE
+select
+case 
+    when race = 'White'
+        and part_score >=.3
+        and part_score <.7
+        and turnout_score > .35
+    then 'white persuasion'
+    when race = 'Hispanic'
+        and part_score >=.3
+        and part_score <.7
+        and turnout_score >.20
+    then 'Hispanic persuasion'
+    when race in ('AfAm','Native','Asian')
+        and part_score >=.3
+        and part_score <.7
+        and turnout_score > .20
+    then 'Other POC persuasion'
+    else 'non_target'
+end as audience,
+count(voterbase_id) as pop,
+avg(part_score) as avg_part_score,
+avg(turnout_score) as avg_turnout_score,
+avg(persuasion_score) as persuasion_score
+from targets_2022.base_file
+where vf_source_state = 'AZ'
+group by audience
